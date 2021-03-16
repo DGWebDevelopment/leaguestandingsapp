@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "leaguestandingsapp340ab7c4": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}
