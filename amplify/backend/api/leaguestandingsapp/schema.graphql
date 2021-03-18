@@ -1,5 +1,5 @@
-type Note @model {
+type User @model {
   id: ID!
-  name: String!
-  description: String
+  username: String!
+  team: String!
 }

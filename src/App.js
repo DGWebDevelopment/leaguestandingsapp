@@ -1,72 +1,63 @@
 import React, { useState, useEffect } from 'react';
-
-import logo from './logo.svg';
+import axios from 'axios';
 import './App.css';
-import { API } from 'aws-amplify';
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
-import { listNotes } from './graphql/queries';
-import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
-
-const initialFormState = { name: '', description: '' }
+import backgroundImage from "./images/AdobeStock_306938507.jpeg";
 
 
+function App(){
 
-
-
-function App() {
-  const [notes, setNotes] = useState([]);
-  const [formData, setFormData] = useState(initialFormState);
+  const [premierLeagueStandings, fillStandings]=useState([])
 
   useEffect(
-    () => {fetchNotes()}, []
+    () => {fetchStandings()}, []
   );
 
-  async function fetchNotes() {
-    const apiData = await API.graphql({ query: listNotes });
-    setNotes(apiData.data.listNotes.items);
-  }
-
-  async function createNote() {
-    if (!formData.name || !formData.description) return;
-    await API.graphql({ query: createNoteMutation, variables: { input: formData } });
-    setNotes([ ...notes, formData ]);
-    setFormData(initialFormState);
-  }
-
-  async function deleteNote({ id }) {
-    const newNotesArray = notes.filter(note => note.id !== id);
-    setNotes(newNotesArray);
-    await API.graphql({ query: deleteNoteMutation, variables: { input: { id } }});
+  function fetchStandings(){
+    axios({ //Get Premier League Standings
+      'method': "GET",
+      'url': 'https://api-football-v1.p.rapidapi.com/v2/leagueTable/2790',
+      'headers': {
+          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+          'x-rapidapi-key': 'a3e9667df8msh1fa39a70e177eadp14832bjsned2e9b17d6a1'
+      },
+    }).then((results)=>{
+      var standingsFromAPI = results.data.api.standings[0]
+      var ourStandings=[]
+      for (var i=0; i<standingsFromAPI.length; i++) {
+        ourStandings.push(standingsFromAPI[i])
+      }
+      fillStandings(ourStandings)
+    })
   }
 
   return (
-    <div className="App">
-      <h1>My Notes App</h1>
-      <input
-        onChange={e => {setFormData({ ...formData, 'name': e.target.value}); console.log(e.target.value)}}
-        placeholder="Note name"
-        value={formData.name}
-      />
-      <input
-        onChange={e => setFormData({ ...formData, 'description': e.target.value})}
-        placeholder="Note description"
-        value={formData.description}
-      />
-      <button onClick={createNote}>Create Note</button>
-      <div style={{marginBottom: 30}}>
-        {
-          notes.map(note => (
-            <div key={note.id || note.name}>
-              <h2>{note.name}</h2>
-              <p>{note.description}</p>
-              <button onClick={() => deleteNote(note)}>Delete note</button>
-            </div>
-          ))
-        }
-      </div>
-      <AmplifySignOut />
-    </div>
-  );
+    <div style={{textAlign:'center', display:'block'}}>
+      <h1>See the standings for the Premier League below!</h1>
+      <img src={backgroundImage} style={{width:'500px'}} />
+      
+
+      <table style={{marginLeft:'auto', marginRight:'auto', position:'relative', top:'25px'}}>
+        <tbody>
+          <tr>
+            <th>Standing:</th><th>Team:</th><th>Points:</th>
+          </tr>
+          
+          {premierLeagueStandings.map(standing=>{
+            return (
+              <tr>
+                <td>{standing.rank}</td><td>{standing.teamName}</td><td>{standing.points}</td>
+                <td></td>
+              </tr>
+            )
+          })
+          }
+        </tbody>
+      </table>
+
+      <AmplifySignOut style={{position:'relative',top:'82px'}}/>
+  </div>
+  )
 }
 
 export default withAuthenticator(App);
